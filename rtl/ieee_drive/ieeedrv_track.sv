@@ -37,7 +37,7 @@ module ieeedrv_track #(parameter SUBDRV=2)
 
 	input      [NS:0] save_track,
 	input       [6:0] track[SUBDRV],
-	output reg  [7:0] ltrack,
+	output reg  [7:0] ltrack[SUBDRV],
 
 	output reg [NS:0] busy
 );
@@ -92,21 +92,21 @@ wire [7:0] INIT_TRACK  = 8'(drv_type  ? 18 : 39);
 reg drv_change = 0;
 
 always @(posedge clk_sys) begin
-	reg [10:0] chg_count = 0;
+    reg [10:0] chg_count = 0;
 
-	drv_change <= 0;
+    drv_change <= 0;
 
-	if (SUBDRV == 1 || drv_sel_s == drv_act)
-		chg_count <= 0;
-	else if (&chg_count)
-		drv_change <= 1;
-	else if (ce)
-		chg_count <= chg_count + 1'd1;
+    if (SUBDRV == 1 || drv_sel_s == drv_act)
+        chg_count <= 0;
+    else if (&chg_count)
+        drv_change <= 1;
+    else if (ce)
+        chg_count <= chg_count + 1'd1;
 end
 
 `define select_track(drv, track) \
- 	busy[drv]       <= 1; \
-	ltrack          <= track; \
+	busy[drv]       <= 1; \
+	ltrack[drv]     <= track; \
 	sd_blk_cnt[drv] <= 6'(START_SECTOR[drv_type][track] - START_SECTOR[drv_type][track - 1'd1] - 1); \
 	sd_lba[drv]     <= START_SECTOR[drv_type][track - 1'd1];
 
@@ -143,8 +143,8 @@ always @(posedge clk_sys) begin
 	else if (resetting) begin
 		if (!drv_sel_s || SUBDRV==1) begin
 			resetting    <= 0;
-		   ltrack       <= '1;/* Error: procedural assignment to a non-register ltrack is not permitted, left-hand side should be reg/integer/time/genvar */
-  		   saving       <= 0;
+			ltrack[drv_act] <= '1;/* Error: procedural assignment to a non-register ltrack is not permitted, left-hand side should be reg/integer/time/genvar */
+			saving       <= 0;
 			update       <= '1;
 		end
 	end
@@ -154,7 +154,7 @@ always @(posedge clk_sys) begin
 			saving <= 0;
 			initing <= 0;
 		
-			if ((initing || saving) && (ltrack != ltrack_new || drv_change)) begin
+			if ((initing || saving) && (ltrack[drv_act] != ltrack_new || drv_change)) begin
 				if (drv_change) begin
 					drv_act <= drv_sel_s;
 
@@ -163,11 +163,11 @@ always @(posedge clk_sys) begin
 						initing <= 1;
 						`read_track(drv_sel_s, INIT_TRACK); /* Error: procedural assignment to a non-register sd_blk_cnt,sd_lba is not permitted, left-hand side should be reg/integer/time/genvar */
 					end
-					else begin
+					else begin	/* Should we check if ltrack[drv_sel_s] != ltrack_new ? */
 						`read_track(drv_sel_s, ltrack_new);
 					end
 				end
-				else begin
+				else begin /* Should we check if the track nr differs? */
 					`read_track(drv_act, ltrack_new);
 				end
 			end
@@ -178,7 +178,7 @@ always @(posedge clk_sys) begin
 
 		if (old_save_track != save_track_s) begin
 			saving <= 1;
-			`write_track(drv_act, ltrack);
+			`write_track(drv_act, ltrack[drv_act]);
 		end
 		else if (drv_change) begin
 			drv_act <= drv_sel_s;
@@ -188,7 +188,7 @@ always @(posedge clk_sys) begin
 				initing <= 1;
 				`read_track(drv_sel_s, INIT_TRACK);
 			end
-			else begin
+			else begin /* Should we check if the track nr differs? */
 				`read_track(drv_sel_s, ltrack_new);
 			end
 		end
@@ -197,7 +197,7 @@ always @(posedge clk_sys) begin
 			initing <= 1;
 			`read_track(drv_act, INIT_TRACK);
 		end
-		else if (ltrack != ltrack_new) begin
+		else if (ltrack[drv_act] != ltrack_new) begin
 			update[0] <= 0;
 			`read_track(drv_act, ltrack_new);
 		end

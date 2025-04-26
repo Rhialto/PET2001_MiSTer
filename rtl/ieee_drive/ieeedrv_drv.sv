@@ -100,14 +100,14 @@ wire  [1:0] drv_spd;
 wire        drv_hd;
 wire        drv_rw;
 
-wire  [7:0] drv_dat_i;
-wire        drv_sync_i;
-wire        drv_ready;
-wire        drv_brdy_n;
+wire  [7:0] drv_dat_i[SUBDRV];
+wire        drv_sync_i[SUBDRV];
+wire        drv_ready[SUBDRV];
+wire        drv_brdy_n[SUBDRV];
 
 wire  [7:0] drv_dat_o;
 wire        drv_sync_o;
-wire        drv_error;
+wire        drv_error[SUBDRV];
 
 wire [NS:0] led_act_o;
 wire        led_err_o;
@@ -145,12 +145,12 @@ ieeedrv_logic #(.SUBDRV(SUBDRV)) drv_logic
 	.drv_hd(drv_hd),
 	.drv_rw(drv_rw),
 
-	.drv_error(drv_error),
-	.drv_ready(drv_ready),
-	.drv_brdy_n(drv_brdy_n),
+	.drv_error(drv_error[drv_act]),
+	.drv_ready(drv_ready[drv_act]),
+	.drv_brdy_n(drv_brdy_n[drv_act]),
 
-	.drv_dat_i(drv_dat_i),
-	.drv_sync_i(drv_sync_i),
+	.drv_dat_i(drv_dat_i[drv_act]),
+	.drv_sync_i(drv_sync_i[drv_act]),
 
 	.drv_dat_o(drv_dat_o),
 	.drv_sync_o(drv_sync_o)
@@ -165,8 +165,8 @@ wire [NS:0] save_track;
 wire  [6:0] track[SUBDRV];
 wire        drv_act;
 reg  [15:0] dsk_id[SUBDRV];
-reg   [7:0] drv_sd_buff_din;
-wire        drv_we;
+//reg   [7:0] drv_sd_buff_din;
+wire        drv_we[SUBDRV];
 
 wire [12:0] DIR_SECTOR = drv_type ? 13'd357 : 13'd1102;
 
@@ -181,7 +181,7 @@ generate
 
 			.drv_type(drv_type),
 
-			.we(drv_we & (drv_ready | drv_sync_o) & drv_mtr[i] & (drv_sel == i)),
+			.we(drv_we[i] & (drv_ready[i] | drv_sync_o) & drv_mtr[i] & (drv_sel == i)),
 
 			.img_mounted(img_mounted[i]),
 			.act(led_act[i] & (drv_sel == i)),
@@ -209,94 +209,99 @@ generate
 					default: ;
 				endcase
 
-			if (id_wr && drv_act == i) begin
-				dsk_id[i] <= id_hdr;
+			if (id_wr[i] && drv_act == i) begin
+				dsk_id[i] <= id_hdr[i];
 				id_loaded[i] <= 1;
 			end
 		end
 
-		assign sd_buff_din[i] = drv_sd_buff_din;
+		//assign sd_buff_din[i] = drv_sd_buff_din;
 	end
 endgenerate
 
 wire [NS:0] sd_busy, busy;
-wire  [7:0] ltrack;
+wire  [7:0] ltrack[SUBDRV];
 
 ieeedrv_sync #(SUBDRV) busy_sync(clk_sys, busy, sd_busy);
 
 ieeedrv_track #(SUBDRV) drv_track
 (
-	.clk_sys(clk_sys),
-	.reset(drv_reset),
-	.ce(ce),
+    .clk_sys(clk_sys),
+    .reset(drv_reset),
+    .ce(ce),
 
-	.drv_type(drv_type),
+    .drv_type(drv_type),
 
-	.mounted(img_mounted),
-	.loaded(img_loaded),
+    .mounted(img_mounted),
+    .loaded(img_loaded),
 
-	.drv_mtr(drv_mtr),
-	.drv_sel(drv_sel),
-	.drv_act(drv_act),
-	.drv_hd(drv_hd),
+    .drv_mtr(drv_mtr),
+    .drv_sel(drv_sel),
+    .drv_act(drv_act),      // drv_act follows drv_sel with some delay
+    .drv_hd(drv_hd),
 
-	.sd_lba(sd_lba),
-	.sd_blk_cnt(sd_blk_cnt),
-	.sd_rd(sd_rd),
-	.sd_wr(sd_wr),
-	.sd_ack(sd_ack),
+    .sd_lba(sd_lba),
+    .sd_blk_cnt(sd_blk_cnt),
+    .sd_rd(sd_rd),
+    .sd_wr(sd_wr),
+    .sd_ack(sd_ack),
 
-	.save_track(save_track),
-	.track(track),
-	.ltrack(ltrack),
+    .save_track(save_track),
+    .track(track),
+    .ltrack(ltrack),
 
-	.busy(busy)
+    .busy(busy)
 );
 
-reg  [15:0] id_hdr;
-reg         id_wr;
+reg  [15:0] id_hdr[SUBDRV];
+reg         id_wr[SUBDRV];
 
-ieeedrv_trkgen #(SUBDRV) drv_trkgen
-(
-	.CLK(CLK),
+generate
+    for (i=0; i<SUBDRV; i=i+1) begin :subtrkgen
 
-	.clk_sys(clk_sys),
+        ieeedrv_trkgen #(1) drv_trkgen
+        (
+            .CLK(CLK),
 
-	.reset(drv_reset),
+            .clk_sys(clk_sys),
 
-	.drv_type(drv_type),
-	.img_type(img_type[drv_act]),
+            .reset(drv_reset),
 
-	.drv_act(drv_act),
-	.drv_hd(drv_hd),
-	.mtr(drv_mtr[drv_act]),
-	.freq(drv_spd),
-	.track(ltrack),
-	.busy(sd_busy[drv_act] | ~id_loaded[drv_act]),
-	.wprot(img_readonly[drv_act]),
-	.rw(drv_rw),
+            .drv_type(drv_type),
+            .img_type(img_type[i]),
 
-	.we(drv_we),
-	.byte_n(drv_ready),
-	.brdy_n(drv_brdy_n),
-	.error(drv_error),
+            .drv_act(0),
+            .drv_hd(drv_hd),
+            .mtr(drv_mtr[i]),
+            .freq(drv_spd),
+            .track(ltrack[i]),
+            .busy(sd_busy[i] | ~id_loaded[i]),
+            .wprot(img_readonly[i]),
+            .rw(drv_act == i ? drv_rw : 1),
 
-	.sync_rd_n(drv_sync_i),
-	.byte_rd(drv_dat_i),
+            .we(drv_we[i]),
+            .byte_n(drv_ready[i]),
+            .brdy_n(drv_brdy_n[i]),
+            .error(drv_error[i]),
 
-	.sync_wr(drv_sync_o),
-	.byte_wr(drv_dat_o),
+            .sync_rd_n(drv_sync_i[i]),
+            .byte_rd(drv_dat_i[i]),
 
-	.loaded(img_loaded[drv_act]),
-	.sd_clk(clk_sys),
-	.sd_buff_addr(sd_buff_addr),
-	.sd_buff_dout(sd_buff_dout),
-	.sd_buff_din(drv_sd_buff_din),
-	.sd_buff_wr(|sd_ack & sd_buff_wr),
+            .sync_wr(drv_sync_o && drv_act == i),
+            .byte_wr(drv_dat_o),
 
-	.id(dsk_id[drv_act]),
-	.id_hdr(id_hdr),
-	.id_wr(id_wr)
-);
+            .loaded(img_loaded[i]),
+            .sd_clk(clk_sys),
+            .sd_buff_addr(sd_buff_addr),
+            .sd_buff_dout(sd_buff_dout),
+            .sd_buff_din(sd_buff_din[i]),
+            .sd_buff_wr(sd_ack[i] & sd_buff_wr),
+
+            .id(dsk_id[i]),
+            .id_hdr(id_hdr[i]),
+            .id_wr(id_wr[i])
+        );
+    end
+endgenerate
 
 endmodule
