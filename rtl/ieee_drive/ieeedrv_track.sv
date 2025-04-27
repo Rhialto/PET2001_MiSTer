@@ -198,7 +198,7 @@ always @(posedge clk_sys) begin
 			`read_track(drv_act, INIT_TRACK);
 		end
 		else if (ltrack[drv_act] != ltrack_new) begin
-			update[0] <= 0;
+			update[drv_act] <= 0;
 			`read_track(drv_act, ltrack_new);
 		end
 	end
