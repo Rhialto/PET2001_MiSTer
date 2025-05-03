@@ -18,8 +18,10 @@ module ieeedrv_drv #(parameter SUBDRV=2)
    input       [31:0] CLK,
 
 	input              clk_sys,
-   input              reset,
+	input              reset,
+	(* dont_touch = "true",mark_debug = "true" *)
 	input              ce,
+	(* dont_touch = "true",mark_debug = "true" *)
 	input              ph2_r,
 	input              ph2_f,
 
@@ -27,8 +29,8 @@ module ieeedrv_drv #(parameter SUBDRV=2)
 	output      [NS:0] led_act,
 	output             led_err,
 
-   input  st_ieee_bus bus_i,
-   output st_ieee_bus bus_o,
+	input  st_ieee_bus bus_i,
+	output st_ieee_bus bus_o,
 
 	input              drv_type,
 	input              dos_16k,
@@ -43,15 +45,23 @@ module ieeedrv_drv #(parameter SUBDRV=2)
 	output      [10:0] ctl_addr,
 	input        [7:0] ctl_data,
 
+	(* dont_touch = "true",mark_debug = "true" *)
 	output      [31:0] sd_lba[SUBDRV],
 	output       [5:0] sd_blk_cnt[SUBDRV],
+	(* dont_touch = "true",mark_debug = "true" *)
 	output      [NS:0] sd_rd,
+	(* dont_touch = "true",mark_debug = "true" *)
 	output      [NS:0] sd_wr,
+	(* dont_touch = "true",mark_debug = "true" *)
 	input       [NS:0] sd_ack,
 
+	(* dont_touch = "true",mark_debug = "true" *)
 	input       [12:0] sd_buff_addr,
+	(* dont_touch = "true",mark_debug = "true" *)
 	input        [7:0] sd_buff_dout,
+	(* dont_touch = "true",mark_debug = "true" *)
 	output       [7:0] sd_buff_din[SUBDRV],
+	(* dont_touch = "true",mark_debug = "true" *)
 	input              sd_buff_wr
 );
 
@@ -87,29 +97,43 @@ generate
 	end
 endgenerate
 
+	(* dont_touch = "true",mark_debug = "true" *)
 assign led_err = led_err_o & ~drv_reset;
 
 // ====================================================================
 // Logic
 // ====================================================================
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_sel;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire [NS:0] drv_mtr;
 wire  [1:0] drv_step[SUBDRV];
 wire  [1:0] drv_spd;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_hd;
+	(* dont_touch = "true",mark_debug = "true" *)
 reg  [NS:0] drvs_hd;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_rw;
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire  [7:0] drv_dat_i[SUBDRV];
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_sync_i[SUBDRV];
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_ready[SUBDRV];
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_brdy_n[SUBDRV];
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire  [7:0] drv_dat_o;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_sync_o;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_error[SUBDRV];
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire [NS:0] led_act_o;
 wire        led_err_o;
 
@@ -166,12 +190,16 @@ end
 // Track
 // ====================================================================
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire [NS:0] save_track;
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire  [6:0] track[SUBDRV];
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_act;
 reg  [15:0] dsk_id[SUBDRV];
 //reg   [7:0] drv_sd_buff_din;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire        drv_we[SUBDRV];
 
 wire [12:0] DIR_SECTOR = drv_type ? 13'd357 : 13'd1102;
@@ -226,7 +254,9 @@ generate
 	end
 endgenerate
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire [NS:0] sd_busy, busy;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire  [7:0] ltrack[SUBDRV];
 
 ieeedrv_sync #(SUBDRV) busy_sync(clk_sys, busy, sd_busy);
