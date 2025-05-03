@@ -44,6 +44,7 @@ module ieeedrv_trkgen #(parameter SUBDRV=2)
 	output reg        sync_rd_n,
 	output reg  [7:0] byte_rd,
 
+	(* dont_touch = "true",mark_debug = "true" *)
 	input             sync_wr,
 	input       [7:0] byte_wr,
 
@@ -55,6 +56,7 @@ module ieeedrv_trkgen #(parameter SUBDRV=2)
 	input             sd_buff_wr
 );
 
+	(* dont_touch = "true",mark_debug = "true" *)
 wire [4:0] sector_max = drv_type ? (
 									(track < 18) ? 5'd20 :
 									(track < 25) ? 5'd18 :
@@ -104,12 +106,16 @@ localparam HEADER_SYNC_CODE = 8'h08;
 localparam DATA_SYNC_CODE   = 8'h07;
 localparam TEST_SYNC_CODE   = 8'h0F;
 
+	(* dont_touch = "true",mark_debug = "true" *)
 reg bit_clk_en;
 always @(posedge clk_sys) begin
 	int       sum = 0;
 
+	(* dont_touch = "true",mark_debug = "true" *)
 	reg [3:0] bit_clk_cnt;
+	(* dont_touch = "true",mark_debug = "true" *)
 	reg [7:0] track_r;
+	(* dont_touch = "true",mark_debug = "true" *)
 	reg       rw_r;
 
 	bit_clk_en <= 0;
@@ -149,6 +155,7 @@ ieeedrv_mem #(8,13) buffer
 	.q_b(buff_do)
 );
 
+	(* dont_touch = "true",mark_debug = "true" *)
 reg trk_reset, trk_reset_ack;
 always @(posedge clk_sys) begin
 	reg drv_act_l;
@@ -163,8 +170,11 @@ always @(posedge clk_sys) begin
 	end
 end
 
+	(* dont_touch = "true",mark_debug = "true" *)
 reg  [7:0] buff_addr;
+	(* dont_touch = "true",mark_debug = "true" *)
 wire [7:0] buff_do;
+	(* dont_touch = "true",mark_debug = "true" *)
 reg  [7:0] buff_di;
 
 reg  [4:0] sector[SUBDRV];
@@ -173,12 +183,15 @@ reg  [4:0] sector[SUBDRV];
 typedef enum bit[3:0] {RW_RESET, RW_IDLE, R_SYNCHDR, R_SYNCDATA, R_SYNCTEST, R_HEADER, R_DATA, R_TAIL, R_TEST, W_SYNC, W_HEADER, W_DATA} rwState_t;
 
 always @(posedge clk_sys) begin
+	(* dont_touch = "true",mark_debug = "true" *)
 	reg [3:0] bit_cnt;
+	(* dont_touch = "true",mark_debug = "true" *)
 	reg [8:0] byte_cnt;
 	reg [7:0] chk;
 	reg [7:0] old_track;
 	reg       rw_l;
 
+	(* dont_touch = "true",mark_debug = "true" *)
 	rwState_t rwState = RW_RESET;
 
 	buff_di <= 8'h00;
@@ -464,9 +477,9 @@ always @(posedge clk_sys) begin
 							if (trk_reset)
 								rwState <= RW_RESET;
 							else if (!rw && sync_wr && !wprot)
-								rwState <= W_SYNC;
+								rwState <= W_SYNC;		// should this case increase the sector number?
 							else
-								rwState <= R_TAIL;
+								rwState <= R_TAIL;		// should this case increase the sector number?
 						end
 						else begin
 							buff_addr <= 8'((byte_cnt == 0) ? 0 : buff_addr + 1);
