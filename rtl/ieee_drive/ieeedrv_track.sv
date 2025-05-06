@@ -163,11 +163,11 @@ always @(posedge clk_sys) begin
 						initing <= 1;
 						`read_track(drv_sel_s, INIT_TRACK); /* Error: procedural assignment to a non-register sd_blk_cnt,sd_lba is not permitted, left-hand side should be reg/integer/time/genvar */
 					end
-					else begin	/* Should we check if ltrack[drv_sel_s] != ltrack_new ? */
+					else if (ltrack[drv_sel_s] != ltrack_new) begin	/* Is it advisiable to check for a changing track number here? */
 						`read_track(drv_sel_s, ltrack_new);
 					end
 				end
-				else begin /* Should we check if the track nr differs? */
+				else if (ltrack[drv_act] != ltrack_new) begin	/* Is it advisiable to check for a changing track number here? */
 					`read_track(drv_act, ltrack_new);
 				end
 			end
@@ -188,7 +188,7 @@ always @(posedge clk_sys) begin
 				initing <= 1;
 				`read_track(drv_sel_s, INIT_TRACK);
 			end
-			else begin /* Should we check if the track nr differs? */
+			else if (ltrack[drv_sel_s] != ltrack_new) begin	/* Is it advisiable to check for a changing track number here? */
 				`read_track(drv_sel_s, ltrack_new);
 			end
 		end
