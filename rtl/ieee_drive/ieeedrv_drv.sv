@@ -98,6 +98,7 @@ wire [NS:0] drv_mtr;
 wire  [1:0] drv_step[SUBDRV];
 wire  [1:0] drv_spd;
 wire        drv_hd;
+reg  [NS:0] drvs_hd;
 wire        drv_rw;
 
 wire  [7:0] drv_dat_i[SUBDRV];
@@ -157,6 +158,10 @@ ieeedrv_logic #(.SUBDRV(SUBDRV)) drv_logic
 	.drv_sync_o(drv_sync_o)
 );
 
+always @(posedge clk_sys) begin
+    drvs_hd[drv_sel] <= drv_hd;
+end
+
 // ====================================================================
 // Track
 // ====================================================================
@@ -186,6 +191,7 @@ generate
 
 			.img_mounted(img_mounted[i]),
 			.act(led_act[i] & (drv_sel == i)),
+			.hd(drvs_hd[i]),
 
 			.mtr(drv_mtr[i]),
 			.stp(drv_step[i]),

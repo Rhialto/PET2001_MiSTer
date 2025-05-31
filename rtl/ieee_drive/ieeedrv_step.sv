@@ -23,6 +23,7 @@ module ieeedrv_step (
 
    input            img_mounted,
    input            act,
+   input            hd,
 
    input            mtr,
    input      [1:0] stp,
@@ -45,9 +46,11 @@ assign track = drv_type ? htrack[7:1] :  htrack[8:2];
 always @(posedge clk_sys) begin
 	reg       track_modified;
 	reg [1:0] move, stp_old;
+	reg       hd_old;
 
 	stp_old <= stp;
 	move <= stp - stp_old;
+	hd_old <= hd;
 
 	if (we)          track_modified <= 1;
 	if (img_mounted) track_modified <= 0;
@@ -64,7 +67,7 @@ always @(posedge clk_sys) begin
 			track_modified <= 0;
 		end
 
-		if (track_modified && !act) begin // stopping activity or changing drives
+		if (track_modified && (!act || hd != hd_old)) begin // stopping activity or changing drives, or changing heads
 			save_track <= ~save_track;
 			track_modified <= 0;
 		end
