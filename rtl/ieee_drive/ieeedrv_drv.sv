@@ -187,10 +187,10 @@ generate
 
 			.drv_type(drv_type),
 
-			.we(drv_we[i] & (drv_ready[i] | drv_sync_o) & drv_mtr[i] & (drv_sel == i)),
+			.we(drv_we[i] & (drv_ready[i] | drv_sync_o) & drv_mtr[i] & (drv_act == i)),	// was drv_sel
 
 			.img_mounted(img_mounted[i]),
-			.act(led_act[i] & (drv_sel == i)),
+			.act(led_act_o[i]),	// was led_act
 			.hd(drvs_hd[i]),
 
 			.mtr(drv_mtr[i]),
