@@ -92,7 +92,8 @@ wire [7:0] INIT_TRACK  = 8'(drv_type  ? 18 : 39);
 reg drv_change = 0;
 
 always @(posedge clk_sys) begin
-    reg [10:0] chg_count = 0;
+    //reg [10:0] chg_count = 0;
+    reg [0:0] chg_count = 0;
 
     drv_change <= 0;
 
