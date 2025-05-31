@@ -198,7 +198,11 @@ always @(posedge clk_sys) begin
 			`read_track(drv_act, INIT_TRACK);
 		end
 		else if (ltrack != ltrack_new) begin
+			/*
 			update[0] <= 0;
+			 * due to the if a few lines above we know that
+			 * update[drv_act] is false so this line is unneeded
+			 * and may even clear the wrong bit. */
 			`read_track(drv_act, ltrack_new);
 		end
 	end
