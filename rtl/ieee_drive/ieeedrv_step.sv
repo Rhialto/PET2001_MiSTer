@@ -67,7 +67,7 @@ always @(posedge clk_sys) begin
 			track_modified <= 0;
 		end
 
-		if (track_modified && (!act || hd != hd_old)) begin // stopping activity, or changing heads
+		if (track_modified && (!act || hd != hd_old)) begin // stopping activity or changing drives, or changing heads
 			save_track <= ~save_track;
 			track_modified <= 0;
 		end
