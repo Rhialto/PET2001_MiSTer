@@ -163,8 +163,17 @@ always @(posedge clk_sys) begin
 						initing <= 1;
 						`read_track(drv_sel_s, INIT_TRACK); /* Error: procedural assignment to a non-register sd_blk_cnt,sd_lba is not permitted, left-hand side should be reg/integer/time/genvar */
 					end
-					else if (ltrack[drv_sel_s] != ltrack_new) begin	/* Is it advisiable to check for a changing track number here? */
-						`read_track(drv_sel_s, ltrack_new);
+					else begin
+						/*
+						 * The selected drive has changed, so we can't use drv_act,
+						 * but must use drv_sel_s. Likewise, we can not use
+						 * ltrack_new which is also based on drv_act.
+						 */
+						reg  [7:0] ltrack_new_sel = 8'(track_s[drv_sel_s] + (drv_hd ? SIDE1_START : SIDE0_START));
+						if (ltrack[drv_sel_s] != ltrack_new_sel) begin
+							`read_track(drv_sel_s, ltrack_new_sel);
+						end
+
 					end
 				end
 				else if (ltrack[drv_act] != ltrack_new) begin	/* Is it advisiable to check for a changing track number here? */
@@ -188,8 +197,11 @@ always @(posedge clk_sys) begin
 				initing <= 1;
 				`read_track(drv_sel_s, INIT_TRACK);
 			end
-			else if (ltrack[drv_sel_s] != ltrack_new) begin	/* Is it advisiable to check for a changing track number here? */
-				`read_track(drv_sel_s, ltrack_new);
+			else begin
+				reg  [7:0] ltrack_new_sel = 8'(track_s[drv_sel_s] + (drv_hd ? SIDE1_START : SIDE0_START));
+				if (ltrack[drv_sel_s] != ltrack_new_sel) begin
+					`read_track(drv_sel_s, ltrack_new_sel);
+				end
 			end
 		end
 		else if (update[drv_act]) begin
